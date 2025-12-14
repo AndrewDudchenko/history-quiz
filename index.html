@@ -262,45 +262,47 @@
           era: "Незалежна Україна",
         },
         {
-           image: "https://upload.wikimedia.org/wikipedia/commons/e/ea/House_with_Chimaeras_-_May_2006.jpg",
+           // --- ОНОВЛЕНЕ ФОТО БУДИНКУ З ХИМЕРАМИ ---
+           image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg/500px-%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg",
            name: "Будинок з химерами",
            year: "1901–1903 рр.",
            era: "Модерн"
         },
         {
-            image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Chernivtsi_University_02.jpg/1200px-Chernivtsi_University_02.jpg",
+            // --- ОНОВЛЕНЕ ФОТО РЕЗИДЕНЦІЇ МИТРОПОЛИТІВ ---
+            image: "https://cdn.shortpixel.ai/client/to_webp,q_glossy,ret_img/https://www.ukraine-is.com/wp-content/uploads/2016/11/%D0%A0%D0%B5%D0%B7%D0%B8%D0%B4%D0%B5%D0%BD%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D1%82%D1%80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%BE%D0%B2_%D0%91%D1%83%D0%BA%D0%BE%D0%B2%D0%B8%D0%BD%D1%8B-%D0%B8-%D0%94%D0%B0%D0%BB%D0%BC%D0%B0%D1%86%D0%B8%D0%B8.jpg",
             name: "Резиденція митрополитів",
             year: "1864–1882 рр.",
             era: "Еклектика"
         }
       ];
 
-      // --- ДАНІ ТЕСТУ (Quiz Data з твого чату) ---
+      // --- ДАНІ ТЕСТУ (Quiz Data) ---
       const quizQuestions = [
         {
             question: "Хто з київських князів вважається традиційним засновником Софійського собору в Києві?",
             options: ["Володимир Великий", "Ярослав Мудрий", "Володимир Мономах", "Данило Галицький"],
-            correct: 1 // Індекс правильної відповіді (B = 1, бо рахуємо 0, 1, 2, 3)
+            correct: 1 
         },
         {
             question: "У якому архітектурному стилі збудовано Будинок з химерами в Києві (1901–1903 рр.)?",
             options: ["Класицизм", "Бароко", "Модерн", "Готика"],
-            correct: 2 // Модерн
+            correct: 2 
         },
         {
             question: "Хто був архітектором Резиденції митрополитів Буковини і Далмації в Чернівцях?",
             options: ["Владислав Городецький", "Франческо Бартоломео Растреллі", "Йозеф Главка", "Бернар Меретин"],
-            correct: 2 // Главка
+            correct: 2 
         },
         {
             question: "Яка пам'ятка набула сучасного вигляду в стилі українського бароко за часів Івана Мазепи?",
             options: ["Генуезька фортеця", "Софійський собор", "Хотинська фортеця", "Палац Розумовського"],
-            correct: 1 // Софійський собор
+            correct: 1 
         },
         {
             question: "До якого періоду належить основна розбудова мурованих укріплень Кам’янець-Подільської фортеці?",
             options: ["X–XI ст.", "XIV–XVI ст.", "XVIII–XIX ст.", "XX ст."],
-            correct: 1 // XIV–XVI ст.
+            correct: 1 
         }
       ];
 
@@ -365,6 +367,7 @@
 
       function loadQuestion() {
         const currentData = quizQuestions[currentQuestionIndex];
+        // Ось тут скрипт замінює текст "Завантаження питання..." на реальне питання
         questionText.textContent = `${currentQuestionIndex + 1}. ${currentData.question}`;
         optionsContainer.innerHTML = "";
         nextBtn.style.display = "none";
@@ -382,7 +385,6 @@
         const currentData = quizQuestions[currentQuestionIndex];
         const buttons = optionsContainer.querySelectorAll(".option-btn");
         
-        // Блокуємо всі кнопки
         buttons.forEach(btn => btn.disabled = true);
 
         if (selectedIndex === currentData.correct) {
@@ -390,7 +392,6 @@
             score++;
         } else {
             btnElement.classList.add("wrong");
-            // Підсвічуємо правильну, якщо помилився
             buttons[currentData.correct].classList.add("correct");
         }
 
@@ -412,426 +413,7 @@
         scoreText.textContent = `Твій результат: ${score} з ${quizQuestions.length}`;
       }
 
-      // Старт тесту
-      loadQuestion();
-
-    </script>
-  </body>
-</html><!DOCTYPE html>
-<html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Вгадай пам'ятку: Тренажер</title>
-    <style>
-      /* --- СТИЛІ (CSS) --- */
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f0f2f5;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        padding-bottom: 50px;
-      }
-
-      h1 {
-        color: #333;
-        margin: 30px 0;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      /* Кнопка перемішування */
-      .shuffle-btn {
-        background-color: #3498db;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1rem;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .shuffle-btn:hover {
-        background-color: #2980b9;
-        transform: translateY(-2px);
-      }
-
-      /* Контейнер для карток */
-      .cards-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 25px;
-        justify-content: center;
-        max-width: 1000px;
-        padding: 20px;
-        margin-bottom: 40px;
-      }
-
-      /* Налаштування картки */
-      .card {
-        background-color: transparent;
-        width: 300px;
-        height: 400px;
-        perspective: 1000px;
-        cursor: pointer;
-        opacity: 0;
-      }
-
-      @keyframes fadeIn {
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        transform-style: preserve-3d;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        border-radius: 15px;
-      }
-
-      .card.flipped .card-inner {
-        transform: rotateY(180deg);
-      }
-
-      .card-front,
-      .card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .card-front { background-color: #fff; }
-      
-      .card-front img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-      }
-      
-      .card:hover .card-front img { transform: scale(1.05); }
-
-      .hint {
-        position: absolute;
-        bottom: 15px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85em;
-        font-weight: 600;
-        pointer-events: none;
-      }
-
-      .card-back {
-        background: linear-gradient(135deg, #2c3e50, #4ca1af);
-        color: white;
-        transform: rotateY(180deg);
-        padding: 25px;
-        box-sizing: border-box;
-      }
-
-      .card-back h2 {
-        margin: 0 0 15px 0;
-        font-size: 1.6em;
-        border-bottom: 2px solid #f1c40f;
-        padding-bottom: 10px;
-      }
-
-      .card-back p {
-        font-size: 1.3em;
-        color: #f1c40f;
-        font-weight: bold;
-        margin: 10px 0;
-      }
-
-      /* --- СТИЛІ ДЛЯ ТЕСТУ (Quiz) --- */
-      .form-container {
-        width: 100%;
-        max-width: 600px;
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        text-align: center;
-      }
-
-      .quiz-question {
-        font-size: 1.2rem;
-        margin-bottom: 20px;
-        color: #2c3e50;
-        font-weight: 600;
-      }
-
-      .quiz-options {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .option-btn {
-        padding: 12px;
-        border: 2px solid #eee;
-        background: #fff;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-        text-align: left;
-      }
-
-      .option-btn:hover:not(:disabled) {
-        background-color: #f8f9fa;
-        border-color: #3498db;
-      }
-
-      .option-btn.correct {
-        background-color: #d4edda;
-        border-color: #28a745;
-        color: #155724;
-      }
-
-      .option-btn.wrong {
-        background-color: #f8d7da;
-        border-color: #dc3545;
-        color: #721c24;
-      }
-
-      .next-btn {
-        margin-top: 20px;
-        padding: 10px 25px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        display: none; /* Ховаємо, поки не обрана відповідь */
-      }
-      
-      .quiz-score {
-        font-size: 1.5rem;
-        color: #2c3e50;
-        margin-bottom: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🏛️ Історичні пам'ятки України</h1>
-
-    <button id="shuffle-btn" class="shuffle-btn">🔄 Перемішати картки</button>
-
-    <div class="cards-container" id="app"></div>
-
-    <div class="form-container" id="quiz-container">
-      <h2 style="color: #333; margin-bottom: 20px;">Перевір свої знання</h2>
-      
-      <div id="quiz-content">
-        <div class="quiz-question" id="question-text">Завантаження питання...</div>
-        <div class="quiz-options" id="options-container"></div>
-        <button class="next-btn" id="next-btn">Наступне питання</button>
-      </div>
-
-      <div id="quiz-result" style="display: none;">
-        <div class="quiz-score" id="score-text"></div>
-        <button class="shuffle-btn" onclick="location.reload()" style="margin: 0 auto;">Спробувати ще раз</button>
-      </div>
-    </div>
-
-    <script>
-      // --- ДАНІ КАРТОК (Flashcards) ---
-      const monuments = [
-        {
-          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg/2560px-80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg",
-          name: "Софійський собор",
-          year: "1037 р. (XI ст.)",
-          era: "Русь-Україна",
-        },
-        {
-          image: "https://hortica.zp.ua/images/sich.jpg",
-          name: "Запорозька Січ",
-          year: "1556 р. (XVI ст.)",
-          era: "Козацька доба",
-        },
-        {
-          image: "https://inside-ua.com/files/originals/monument-nezalezhnosti-2.webp",
-          name: "Монумент Незалежності",
-          year: "2001 р.",
-          era: "Незалежна Україна",
-        },
-        {
-           image: "https://upload.wikimedia.org/wikipedia/commons/e/ea/House_with_Chimaeras_-_May_2006.jpg",
-           name: "Будинок з химерами",
-           year: "1901–1903 рр.",
-           era: "Модерн"
-        },
-        {
-            image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Chernivtsi_University_02.jpg/1200px-Chernivtsi_University_02.jpg",
-            name: "Резиденція митрополитів",
-            year: "1864–1882 рр.",
-            era: "Еклектика"
-        }
-      ];
-
-      // --- ДАНІ ТЕСТУ (Quiz Data з твого чату) ---
-      const quizQuestions = [
-        {
-            question: "Хто з київських князів вважається традиційним засновником Софійського собору в Києві?",
-            options: ["Володимир Великий", "Ярослав Мудрий", "Володимир Мономах", "Данило Галицький"],
-            correct: 1 // Індекс правильної відповіді (B = 1, бо рахуємо 0, 1, 2, 3)
-        },
-        {
-            question: "У якому архітектурному стилі збудовано Будинок з химерами в Києві (1901–1903 рр.)?",
-            options: ["Класицизм", "Бароко", "Модерн", "Готика"],
-            correct: 2 // Модерн
-        },
-        {
-            question: "Хто був архітектором Резиденції митрополитів Буковини і Далмації в Чернівцях?",
-            options: ["Владислав Городецький", "Франческо Бартоломео Растреллі", "Йозеф Главка", "Бернар Меретин"],
-            correct: 2 // Главка
-        },
-        {
-            question: "Яка пам'ятка набула сучасного вигляду в стилі українського бароко за часів Івана Мазепи?",
-            options: ["Генуезька фортеця", "Софійський собор", "Хотинська фортеця", "Палац Розумовського"],
-            correct: 1 // Софійський собор
-        },
-        {
-            question: "До якого періоду належить основна розбудова мурованих укріплень Кам’янець-Подільської фортеці?",
-            options: ["X–XI ст.", "XIV–XVI ст.", "XVIII–XIX ст.", "XX ст."],
-            correct: 1 // XIV–XVI ст.
-        }
-      ];
-
-      // --- ЛОГІКА КАРТОК ---
-      const container = document.getElementById("app");
-      const shuffleBtn = document.getElementById("shuffle-btn");
-
-      function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
-
-      function renderGame() {
-        container.innerHTML = "";
-        monuments.forEach((item, index) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.style.animation = 'none';
-          card.offsetHeight; 
-          card.style.animation = `fadeIn 0.5s forwards ${index * 0.1}s`;
-
-          card.innerHTML = `
-                <div class="card-inner">
-                    <div class="card-front">
-                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://placehold.co/300x400?text=Фото+відсутнє'">
-                        <div class="hint">Натисни, щоб дізнатися</div>
-                    </div>
-                    <div class="card-back">
-                        <h2>${item.name}</h2>
-                        <p>${item.year}</p>
-                        <small>${item.era}</small>
-                    </div>
-                </div>
-            `;
-          card.addEventListener("click", () => card.classList.toggle("flipped"));
-          container.appendChild(card);
-        });
-      }
-
-      shuffleBtn.addEventListener("click", () => {
-        shuffleArray(monuments);
-        renderGame();
-      });
-      
-      // Старт карток
-      shuffleArray(monuments);
-      renderGame();
-
-      // --- ЛОГІКА ТЕСТУ (QUIZ ENGINE) ---
-      let currentQuestionIndex = 0;
-      let score = 0;
-
-      const questionText = document.getElementById("question-text");
-      const optionsContainer = document.getElementById("options-container");
-      const nextBtn = document.getElementById("next-btn");
-      const quizContent = document.getElementById("quiz-content");
-      const quizResult = document.getElementById("quiz-result");
-      const scoreText = document.getElementById("score-text");
-
-      function loadQuestion() {
-        const currentData = quizQuestions[currentQuestionIndex];
-        questionText.textContent = `${currentQuestionIndex + 1}. ${currentData.question}`;
-        optionsContainer.innerHTML = "";
-        nextBtn.style.display = "none";
-
-        currentData.options.forEach((option, index) => {
-            const btn = document.createElement("button");
-            btn.className = "option-btn";
-            btn.textContent = option;
-            btn.onclick = () => checkAnswer(index, btn);
-            optionsContainer.appendChild(btn);
-        });
-      }
-
-      function checkAnswer(selectedIndex, btnElement) {
-        const currentData = quizQuestions[currentQuestionIndex];
-        const buttons = optionsContainer.querySelectorAll(".option-btn");
-        
-        // Блокуємо всі кнопки
-        buttons.forEach(btn => btn.disabled = true);
-
-        if (selectedIndex === currentData.correct) {
-            btnElement.classList.add("correct");
-            score++;
-        } else {
-            btnElement.classList.add("wrong");
-            // Підсвічуємо правильну, якщо помилився
-            buttons[currentData.correct].classList.add("correct");
-        }
-
-        nextBtn.style.display = "inline-block";
-      }
-
-      nextBtn.addEventListener("click", () => {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < quizQuestions.length) {
-            loadQuestion();
-        } else {
-            showResults();
-        }
-      });
-
-      function showResults() {
-        quizContent.style.display = "none";
-        quizResult.style.display = "block";
-        scoreText.textContent = `Твій результат: ${score} з ${quizQuestions.length}`;
-      }
-
-      // Старт тесту
+      // Старт тесту (запускає функцію, яка прибирає текст "Завантаження...")
       loadQuestion();
 
     </script>
