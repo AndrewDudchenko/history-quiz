@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вгадай пам'ятку: Тренажер</title>
+    <style>
+      /* --- СТИЛІ (CSS) --- */
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding-bottom: 50px;
+      }
+
+      h1 {
+        color: #333;
+        margin: 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Кнопка перемішування */
+      .shuffle-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .shuffle-btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+      }
+
+      .shuffle-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Контейнер для карток */
+      .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        justify-content: center;
+        max-width: 1000px;
+        padding: 20px;
+        margin-bottom: 40px;
+      }
+
+      /* Налаштування картки */
+      .card {
+        background-color: transparent;
+        width: 300px;
+        height: 400px;
+        perspective: 1000px;
+        cursor: pointer;
+        opacity: 0;
+        /* Анімація буде задана через JS */
+      }
+
+      /* Ключові кадри для появи */
+      @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-style: preserve-3d;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+      }
+
+      .card.flipped .card-inner {
+        transform: rotateY(180deg);
+      }
+
+      .card-front,
+      .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .card-front {
+        background-color: #fff;
+      }
+
+      .card-front img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+      
+      .card:hover .card-front img {
+        transform: scale(1.05);
+      }
+
+      .hint {
+        position: absolute;
+        bottom: 15px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        pointer-events: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+
+      .card-back {
+        background: linear-gradient(135deg, #2c3e50, #4ca1af);
+        color: white;
+        transform: rotateY(180deg);
+        padding: 25px;
+        box-sizing: border-box;
+      }
+
+      .card-back h2 {
+        margin: 0 0 15px 0;
+        font-size: 1.6em;
+        border-bottom: 2px solid #f1c40f;
+        padding-bottom: 10px;
+      }
+
+      .card-back p {
+        font-size: 1.3em;
+        color: #f1c40f;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      
+      .card-back small {
+        font-style: italic;
+        opacity: 0.8;
+      }
+
+      /* Контейнер для Google Форми */
+      .form-container {
+        width: 100%;
+        max-width: 800px;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🏛️ Історичні пам'ятки України</h1>
+
+    <button id="shuffle-btn" class="shuffle-btn">🔄 Перемішати картки</button>
+
+    <div class="cards-container" id="app"></div>
+
+    <div class="form-container">
+      <h2 style="text-align: center; color: #333; margin-bottom: 20px;">Перевір свої знання</h2>
+      <iframe
+        src="https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform?embedded=true" 
+        width="100%"
+        height="500"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+      >
+        Завантаження форми...
+      </iframe>
+    </div>
+
+    <script>
+      // --- ДАНІ ---
+      const monuments = [
+        {
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg/2560px-80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg",
+          name: "Софійський собор",
+          year: "1037 р. (XI ст.)",
+          era: "Русь-Україна",
+        },
+        {
+          image: "https://hortica.zp.ua/images/sich.jpg",
+          name: "Запорозька Січ",
+          year: "1556 р. (XVI ст.)",
+          era: "Козацька доба",
+        },
+        {
+          image: "https://inside-ua.com/files/originals/monument-nezalezhnosti-2.webp",
+          name: "Монумент Незалежності",
+          year: "2001 р.",
+          era: "Незалежна Україна",
+        }
+      ];
+
+      const container = document.getElementById("app");
+      const shuffleBtn = document.getElementById("shuffle-btn");
+
+      // --- ФУНКЦІЯ ПЕРЕМІШУВАННЯ ---
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      // --- ФУНКЦІЯ ВІДОБРАЖЕННЯ ---
+      function renderGame() {
+        container.innerHTML = "";
+        
+        monuments.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          // Хак для перезапуску анімації
+          card.style.animation = 'none';
+          card.offsetHeight; 
+          card.style.animation = `fadeIn 0.5s forwards ${index * 0.1}s`;
+
+          card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://placehold.co/300x400?text=Фото+відсутнє'">
+                        <div class="hint">Натисни, щоб дізнатися</div>
+                    </div>
+                    <div class="card-back">
+                        <h2>${item.name}</h2>
+                        <p>${item.year}</p>
+                        <small>${item.era}</small>
+                    </div>
+                </div>
+            `;
+
+          card.addEventListener("click", () => {
+            card.classList.toggle("flipped");
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+      // --- ЗАПУСК ---
+      shuffleBtn.addEventListener("click", () => {
+        shuffleArray(monuments);
+        renderGame();
+      });
+
+      // Старт при завантаженні
+      shuffleArray(monuments);
+      renderGame();
+    </script>
+  </body>
+</html>
