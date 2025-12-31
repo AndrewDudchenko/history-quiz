@@ -1,421 +1,747 @@
-<!DOCTYPE html>
-<html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Вгадай пам'ятку: Тренажер</title>
-    <style>
-      /* --- СТИЛІ (CSS) --- */
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f0f2f5;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        padding-bottom: 50px;
+import React, { useState, useEffect, useMemo } from 'react';
+import { Moon, Sun, RotateCcw, CheckCircle, XCircle, Trophy, BookOpen, GraduationCap, Shuffle, HelpCircle, Clock, Star, Grid, Play } from 'lucide-react';
+
+const UAHistoryTrainer = () => {
+  const [activeTab, setActiveTab] = useState('cards');
+  const [isDark, setIsDark] = useState(false);
+  
+  // ГЕЙМІФІКАЦІЯ: Стан досвіду та рівня
+  const [xp, setXp] = useState(0);
+  const [visitedCards, setVisitedCards] = useState(new Set());
+
+  // Ранги користувача
+  const ranks = [
+    { name: "Турист", minXp: 0, icon: "🎒" },
+    { name: "Студент", minXp: 100, icon: "notebook" },
+    { name: "Дослідник", minXp: 300, icon: "🔍" },
+    { name: "Історик", minXp: 600, icon: "📜" },
+    { name: "Професор", minXp: 1000, icon: "🎓" },
+    { name: "Гетьман", minXp: 1500, icon: "👑" }
+  ];
+
+  const currentRank = useMemo(() => {
+    return [...ranks].reverse().find(r => xp >= r.minXp) || ranks[0];
+  }, [xp]);
+
+  const nextRank = ranks[ranks.indexOf(currentRank) + 1];
+  const progressToNext = nextRank 
+    ? ((xp - currentRank.minXp) / (nextRank.minXp - currentRank.minXp)) * 100 
+    : 100;
+
+  // Дані пам'яток (Розширені)
+  const initialMonuments = [
+    {
+      id: 1,
+      image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg/800px-80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg",
+      name: "Софійський собор",
+      year: "1037 р.",
+      dateOrder: 1037,
+      era: "Русь-Україна (Ярослав Мудрий)",
+      description: "Головний храм Київської Русі, місце коронації та поховання князів."
+    },
+    {
+      id: 7, // Нове
+      image: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Golden_Gate_Kiev_2018_G1.jpg",
+      name: "Золоті ворота",
+      year: "1037 р.",
+      dateOrder: 1037,
+      era: "Русь-Україна (Ярослав Мудрий)",
+      description: "Головна брама стародавнього Києва, пам'ятка оборонної зодчества."
+    },
+    {
+      id: 6, 
+      image: "https://karpaty.love/uploads/posts/2017-12/x1513090759_vyd-na-kamjanec-podilsku-fortecju.jpg.pagespeed.ic.gaRcOEgqTj.webp",
+      name: "Кам'янецька фортеця",
+      year: "XIV ст.",
+      dateOrder: 1360,
+      era: "Литовсько-польська доба",
+      description: "Одна з найнеприступніших фортець України, «квітка на камені»."
+    },
+    {
+      id: 8, // Нове
+      image: "https://upload.wikimedia.org/wikipedia/commons/1/14/%D0%97%D0%B0%D0%BC%D0%BE%D0%BA_%D1%96%D0%B7_%D0%B2%D0%B8%D1%81%D0%BE%D1%82%D0%B8_%D0%BF%D1%82%D0%B0%D1%88%D0%B8%D0%BD%D0%BE%D0%B3%D0%BE_%D0%BF%D0%BE%D0%BB%D1%8C%D0%BE%D1%82%D1%83_1.JPG",
+      name: "Замок Паланок",
+      year: "XIV ст.",
+      dateOrder: 1396,
+      era: "Середньовіччя (Мукачево)",
+      description: "Унікальний зразок середньовічної фортифікаційної архітектури на горі вулканічного походження."
+    },
+    {
+      id: 2,
+      image: "https://hortica.zp.ua/images/sich.jpg",
+      name: "Запорозька Січ",
+      year: "1556 р.",
+      dateOrder: 1556,
+      era: "Козацька доба",
+      description: "Військово-політичний центр українського козацтва на острові Хортиця."
+    },
+    {
+      id: 5,
+      image: "https://cdn.shortpixel.ai/client/to_webp,q_glossy,ret_img/https://www.ukraine-is.com/wp-content/uploads/2016/11/%D0%A0%D0%B5%D0%B7%D0%B8%D0%B4%D0%B5%D0%BD%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D1%82%D1%80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%BE%D0%B2_%D0%91%D1%83%D0%BA%D0%BE%D0%B2%D0%B8%D0%BD%D1%8B-%D0%B8-%D0%94%D0%B0%D0%BB%D0%BC%D0%B0%D1%86%D0%B8%D0%B8.jpg",
+      name: "Резиденція митрополитів",
+      year: "1882 р.",
+      dateOrder: 1882,
+      era: "Еклектика (Чернівці)",
+      description: "Нині Чернівецький університет, об'єкт спадщини ЮНЕСКО."
+    },
+    {
+      id: 9, // Нове
+      image: "https://upload.wikimedia.org/wikipedia/commons/6/67/%D0%9B%D1%8C%D0%B2%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%BD%D0%B0%D1%86%D1%96%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D0%B8%D0%B9_%D0%B0%D0%BA%D0%B0%D0%B4%D0%B5%D0%BC%D1%96%D1%87%D0%BD%D0%B8%D0%B9_%D1%82%D0%B5%D0%B0%D1%82%D1%80_%D0%BE%D0%BF%D0%B5%D1%80%D0%B8_%D1%82%D0%B0_%D0%B1%D0%B0%D0%BB%D0%B5%D1%82%D1%83_%D1%96%D0%BC%D0%B5%D0%BD%D1%96_%D0%A1%D0%BE%D0%BB%D0%BE%D0%BC%D1%96%D1%97_%D0%9A%D1%80%D1%83%D1%88%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D1%8C%D0%BA%D0%BE%D1%97_13.jpg",
+      name: "Львівська опера",
+      year: "1900 р.",
+      dateOrder: 1900,
+      era: "Неоренесанс (Львів)",
+      description: "Один з найкрасивіших оперних театрів Європи, архітектурна перлина Львова."
+    },
+    {
+      id: 4,
+      image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg/640px-%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg",
+      name: "Будинок з химерами",
+      year: "1903 р.",
+      dateOrder: 1903,
+      era: "Стиль Модерн",
+      description: "Архітектурний шедевр Владислава Городецького в Києві."
+    },
+    {
+      id: 3,
+      image: "https://inside-ua.com/files/originals/monument-nezalezhnosti-2.webp",
+      name: "Монумент Незалежності",
+      year: "2001 р.",
+      dateOrder: 2001,
+      era: "Сучасна Україна",
+      description: "Символ свободи, встановлений на честь 10-річчя незалежності."
+    }
+  ];
+
+  // Дані вікторини
+  const quizQuestions = [
+    {
+      question: "Хто з князів заснував Софійський собор?",
+      options: ["Володимир Великий", "Ярослав Мудрий", "Данило Галицький", "Святослав Хоробрий"],
+      correct: 1
+    },
+    {
+      question: "У якому стилі збудовано Будинок з химерами?",
+      options: ["Бароко", "Готика", "Модерн", "Класицизм"],
+      correct: 2
+    },
+    {
+      question: "В якому місті знаходиться Резиденція митрополитів?",
+      options: ["Львів", "Київ", "Чернівці", "Одеса"],
+      correct: 2
+    },
+    {
+      question: "Яка фортеця відома як 'Квітка на камені'?",
+      options: ["Хотинська", "Кам'янець-Подільська", "Аккерманська", "Меджибізька"],
+      correct: 1
+    },
+    {
+      question: "Який об'єкт є символом козацької вольниці?",
+      options: ["Софійський собор", "Золоті ворота", "Запорозька Січ", "Києво-Печерська лавра"],
+      correct: 2
+    },
+    {
+      question: "Де знаходиться замок Паланок?",
+      options: ["Ужгород", "Мукачево", "Хуст", "Львів"],
+      correct: 1
+    },
+    {
+      question: "Яка споруда була головним в'їздом до стародавнього Києва?",
+      options: ["Золоті ворота", "Лядські ворота", "Жидівські ворота", "Софійські ворота"],
+      correct: 0
+    }
+  ];
+
+  const [monuments, setMonuments] = useState(initialMonuments);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [flippedCards, setFlippedCards] = useState({});
+
+  // --- MEMORY GAME STATE ---
+  const [memoryCards, setMemoryCards] = useState([]);
+  const [memoryFlipped, setMemoryFlipped] = useState([]); // Indicies of currently flipped cards
+  const [memoryMatched, setMemoryMatched] = useState([]); // IDs of matched pairs
+  const [memoryMoves, setMemoryMoves] = useState(0);
+  const [isMemoryWon, setIsMemoryWon] = useState(false);
+
+  // Керування темою
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  // Перемішування карток (звичайний режим)
+  const shuffleCards = () => {
+    const shuffled = [...monuments].sort(() => Math.random() - 0.5);
+    setMonuments(shuffled);
+    setFlippedCards({}); 
+  };
+
+  // Переворот картки та нарахування XP
+  const toggleCard = (id) => {
+    setFlippedCards(prev => ({ ...prev, [id]: !prev[id] }));
+    
+    if (!visitedCards.has(id)) {
+      setVisitedCards(prev => new Set(prev).add(id));
+      setXp(prev => prev + 15);
+    }
+  };
+
+  // --- ЛОГІКА MEMORY GAME ---
+  const startMemoryGame = () => {
+    // Беремо 6 випадкових пам'яток для гри (щоб було 12 карток)
+    const selection = [...initialMonuments].sort(() => Math.random() - 0.5).slice(0, 6);
+    
+    // Створюємо пари: одна картка з картинкою, одна з назвою
+    const deck = selection.flatMap(item => [
+      { id: item.id, type: 'image', content: item.image, uniqueId: Math.random() },
+      { id: item.id, type: 'text', content: item.name, uniqueId: Math.random() }
+    ]);
+
+    // Перемішуємо колоду
+    const shuffledDeck = deck.sort(() => Math.random() - 0.5);
+    
+    setMemoryCards(shuffledDeck);
+    setMemoryFlipped([]);
+    setMemoryMatched([]);
+    setMemoryMoves(0);
+    setIsMemoryWon(false);
+  };
+
+  // Обробка кліку в Memory Game
+  const handleMemoryClick = (index) => {
+    // Блокуємо, якщо вже відкрито 2, або картка вже відкрита/знайдена
+    if (
+      memoryFlipped.length === 2 || 
+      memoryFlipped.includes(index) || 
+      memoryMatched.includes(memoryCards[index].id)
+    ) return;
+
+    const newFlipped = [...memoryFlipped, index];
+    setMemoryFlipped(newFlipped);
+
+    // Якщо відкрито дві картки
+    if (newFlipped.length === 2) {
+      setMemoryMoves(prev => prev + 1);
+      const card1 = memoryCards[newFlipped[0]];
+      const card2 = memoryCards[newFlipped[1]];
+
+      if (card1.id === card2.id) {
+        // Збіг!
+        setMemoryMatched(prev => [...prev, card1.id]);
+        setMemoryFlipped([]);
+        setXp(prev => prev + 20); // XP за пару
+
+        // Перевірка перемоги
+        if (memoryMatched.length + 1 === memoryCards.length / 2) {
+          setIsMemoryWon(true);
+          setXp(prev => prev + 100); // Бонус за перемогу
+        }
+      } else {
+        // Не збіг, закриваємо через 1с
+        setTimeout(() => {
+          setMemoryFlipped([]);
+        }, 1000);
       }
+    }
+  };
 
-      h1 {
-        color: #333;
-        margin: 30px 0;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
+  useEffect(() => {
+    if (activeTab === 'memory') {
+      startMemoryGame();
+    }
+  }, [activeTab]);
 
-      /* Кнопка перемішування */
-      .shuffle-btn {
-        background-color: #3498db;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1rem;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+  // Обробка відповіді в тесті
+  const handleAnswer = (index) => {
+    if (isAnswered) return;
+    setSelectedOption(index);
+    setIsAnswered(true);
 
-      .shuffle-btn:hover {
-        background-color: #2980b9;
-        transform: translateY(-2px);
-      }
+    if (index === quizQuestions[currentQ].correct) {
+      setScore(prev => prev + 1);
+      setXp(prev => prev + 50); 
+    } else {
+        setXp(prev => prev + 5); 
+    }
+  };
 
-      /* Контейнер для карток */
-      .cards-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 25px;
-        justify-content: center;
-        max-width: 1000px;
-        padding: 20px;
-        margin-bottom: 40px;
-      }
+  const nextQuestion = () => {
+    if (currentQ < quizQuestions.length - 1) {
+      setCurrentQ(prev => prev + 1);
+      setSelectedOption(null);
+      setIsAnswered(false);
+    } else {
+      setShowResult(true);
+      setXp(prev => prev + 100);
+    }
+  };
 
-      /* Налаштування картки */
-      .card {
-        background-color: transparent;
-        width: 300px;
-        height: 400px;
-        perspective: 1000px;
-        cursor: pointer;
-        opacity: 0;
-      }
+  const resetQuiz = () => {
+    setCurrentQ(0);
+    setScore(0);
+    setShowResult(false);
+    setSelectedOption(null);
+    setIsAnswered(false);
+  };
 
-      @keyframes fadeIn {
-        to { opacity: 1; transform: translateY(0); }
-      }
+  const timelineData = [...initialMonuments].sort((a, b) => a.dateOrder - b.dateOrder);
 
-      .card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        transform-style: preserve-3d;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        border-radius: 15px;
-      }
-
-      .card.flipped .card-inner {
-        transform: rotateY(180deg);
-      }
-
-      .card-front,
-      .card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .card-front { background-color: #fff; }
-      
-      .card-front img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-      }
-      
-      .card:hover .card-front img { transform: scale(1.05); }
-
-      .hint {
-        position: absolute;
-        bottom: 15px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85em;
-        font-weight: 600;
-        pointer-events: none;
-      }
-
-      .card-back {
-        background: linear-gradient(135deg, #2c3e50, #4ca1af);
-        color: white;
-        transform: rotateY(180deg);
-        padding: 25px;
-        box-sizing: border-box;
-      }
-
-      .card-back h2 {
-        margin: 0 0 15px 0;
-        font-size: 1.6em;
-        border-bottom: 2px solid #f1c40f;
-        padding-bottom: 10px;
-      }
-
-      .card-back p {
-        font-size: 1.3em;
-        color: #f1c40f;
-        font-weight: bold;
-        margin: 10px 0;
-      }
-
-      /* --- СТИЛІ ДЛЯ ТЕСТУ (Quiz) --- */
-      .form-container {
-        width: 100%;
-        max-width: 600px;
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        text-align: center;
-      }
-
-      .quiz-question {
-        font-size: 1.2rem;
-        margin-bottom: 20px;
-        color: #2c3e50;
-        font-weight: 600;
-      }
-
-      .quiz-options {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .option-btn {
-        padding: 12px;
-        border: 2px solid #eee;
-        background: #fff;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-        text-align: left;
-      }
-
-      .option-btn:hover:not(:disabled) {
-        background-color: #f8f9fa;
-        border-color: #3498db;
-      }
-
-      .option-btn.correct {
-        background-color: #d4edda;
-        border-color: #28a745;
-        color: #155724;
-      }
-
-      .option-btn.wrong {
-        background-color: #f8d7da;
-        border-color: #dc3545;
-        color: #721c24;
-      }
-
-      .next-btn {
-        margin-top: 20px;
-        padding: 10px 25px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        display: none; /* Ховаємо, поки не обрана відповідь */
-      }
-      
-      .quiz-score {
-        font-size: 1.5rem;
-        color: #2c3e50;
-        margin-bottom: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🏛️ Історичні пам'ятки України</h1>
-
-    <button id="shuffle-btn" class="shuffle-btn">🔄 Перемішати картки</button>
-
-    <div class="cards-container" id="app"></div>
-
-    <div class="form-container" id="quiz-container">
-      <h2 style="color: #333; margin-bottom: 20px;">Перевір свої знання</h2>
-      
-      <div id="quiz-content">
-        <div class="quiz-question" id="question-text">Завантаження питання...</div>
-        <div class="quiz-options" id="options-container"></div>
-        <button class="next-btn" id="next-btn">Наступне питання</button>
-      </div>
-
-      <div id="quiz-result" style="display: none;">
-        <div class="quiz-score" id="score-text"></div>
-        <button class="shuffle-btn" onclick="location.reload()" style="margin: 0 auto;">Спробувати ще раз</button>
-      </div>
+  const Confetti = () => (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden flex justify-center">
+      {[...Array(20)].map((_, i) => (
+        <div key={i} className={`confetti-${i} absolute top-[-20px] w-3 h-3 rounded-full opacity-0`} 
+             style={{
+               backgroundColor: i % 2 === 0 ? '#FFD700' : '#0057B7',
+               left: `${Math.random() * 100}%`,
+               animation: `fall ${2 + Math.random() * 2}s linear infinite`,
+               animationDelay: `${Math.random() * 2}s`
+             }} 
+        />
+      ))}
+      <style>{`
+        @keyframes fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
     </div>
+  );
 
-    <script>
-      // --- ДАНІ КАРТОК (Flashcards) ---
-      const monuments = [
-        {
-          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg/2560px-80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg",
-          name: "Софійський собор",
-          year: "1037 р. (XI ст.)",
-          era: "Русь-Україна",
-        },
-        {
-          image: "https://hortica.zp.ua/images/sich.jpg",
-          name: "Запорозька Січ",
-          year: "1556 р. (XVI ст.)",
-          era: "Козацька доба",
-        },
-        {
-          image: "https://inside-ua.com/files/originals/monument-nezalezhnosti-2.webp",
-          name: "Монумент Незалежності",
-          year: "2001 р.",
-          era: "Незалежна Україна",
-        },
-        {
-           // --- ОНОВЛЕНЕ ФОТО БУДИНКУ З ХИМЕРАМИ ---
-           image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg/500px-%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D1%96%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D0%B2_%D1%8F%D0%BA%D0%BE%D0%BC%D1%83_%D0%B6%D0%B8%D0%B2_%D0%B0%D1%80%D1%85%D1%96%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D1%80_%D0%93%D0%BE%D1%80%D0%BE%D0%B4%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9.jpg",
-           name: "Будинок з химерами",
-           year: "1901–1903 рр.",
-           era: "Модерн"
-        },
-        {
-            // --- ОНОВЛЕНЕ ФОТО РЕЗИДЕНЦІЇ МИТРОПОЛИТІВ ---
-            image: "https://cdn.shortpixel.ai/client/to_webp,q_glossy,ret_img/https://www.ukraine-is.com/wp-content/uploads/2016/11/%D0%A0%D0%B5%D0%B7%D0%B8%D0%B4%D0%B5%D0%BD%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D1%82%D1%80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%BE%D0%B2_%D0%91%D1%83%D0%BA%D0%BE%D0%B2%D0%B8%D0%BD%D1%8B-%D0%B8-%D0%94%D0%B0%D0%BB%D0%BC%D0%B0%D1%86%D0%B8%D0%B8.jpg",
-            name: "Резиденція митрополитів",
-            year: "1864–1882 рр.",
-            era: "Еклектика"
-        }
-      ];
-
-      // --- ДАНІ ТЕСТУ (Quiz Data) ---
-      const quizQuestions = [
-        {
-            question: "Хто з київських князів вважається традиційним засновником Софійського собору в Києві?",
-            options: ["Володимир Великий", "Ярослав Мудрий", "Володимир Мономах", "Данило Галицький"],
-            correct: 1 
-        },
-        {
-            question: "У якому архітектурному стилі збудовано Будинок з химерами в Києві (1901–1903 рр.)?",
-            options: ["Класицизм", "Бароко", "Модерн", "Готика"],
-            correct: 2 
-        },
-        {
-            question: "Хто був архітектором Резиденції митрополитів Буковини і Далмації в Чернівцях?",
-            options: ["Владислав Городецький", "Франческо Бартоломео Растреллі", "Йозеф Главка", "Бернар Меретин"],
-            correct: 2 
-        },
-        {
-            question: "Яка пам'ятка набула сучасного вигляду в стилі українського бароко за часів Івана Мазепи?",
-            options: ["Генуезька фортеця", "Софійський собор", "Хотинська фортеця", "Палац Розумовського"],
-            correct: 1 
-        },
-        {
-            question: "До якого періоду належить основна розбудова мурованих укріплень Кам’янець-Подільської фортеці?",
-            options: ["X–XI ст.", "XIV–XVI ст.", "XVIII–XIX ст.", "XX ст."],
-            correct: 1 
-        }
-      ];
-
-      // --- ЛОГІКА КАРТОК ---
-      const container = document.getElementById("app");
-      const shuffleBtn = document.getElementById("shuffle-btn");
-
-      function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
-
-      function renderGame() {
-        container.innerHTML = "";
-        monuments.forEach((item, index) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.style.animation = 'none';
-          card.offsetHeight; 
-          card.style.animation = `fadeIn 0.5s forwards ${index * 0.1}s`;
-
-          card.innerHTML = `
-                <div class="card-inner">
-                    <div class="card-front">
-                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://placehold.co/300x400?text=Фото+відсутнє'">
-                        <div class="hint">Натисни, щоб дізнатися</div>
-                    </div>
-                    <div class="card-back">
-                        <h2>${item.name}</h2>
-                        <p>${item.year}</p>
-                        <small>${item.era}</small>
-                    </div>
-                </div>
-            `;
-          card.addEventListener("click", () => card.classList.toggle("flipped"));
-          container.appendChild(card);
-        });
-      }
-
-      shuffleBtn.addEventListener("click", () => {
-        shuffleArray(monuments);
-        renderGame();
-      });
+  return (
+    <div className={`min-h-screen transition-colors duration-500 font-sans ${isDark ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-800'}`}>
       
-      // Старт карток
-      shuffleArray(monuments);
-      renderGame();
+      {/* Header */}
+      <header className={`sticky top-0 z-40 backdrop-blur-md shadow-sm border-b transition-colors duration-300 ${isDark ? 'bg-slate-900/90 border-slate-700' : 'bg-white/90 border-slate-200'}`}>
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-yellow-400 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                UA
+              </div>
+              <h1 className="text-xl font-bold tracking-tight">
+                History<span className="text-blue-600 dark:text-blue-400">Trainer</span>
+              </h1>
+            </div>
 
-      // --- ЛОГІКА ТЕСТУ (QUIZ ENGINE) ---
-      let currentQuestionIndex = 0;
-      let score = 0;
+            {/* Rank Bar */}
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center gap-2">
+                 <span className="text-xl">{currentRank.icon}</span>
+                 <div className="flex flex-col">
+                    <span className="text-xs font-bold uppercase tracking-wider opacity-60">Ранг</span>
+                    <span className="font-bold text-sm leading-none">{currentRank.name}</span>
+                 </div>
+              </div>
+              <div className="h-8 w-px bg-slate-300 dark:bg-slate-600 mx-2"></div>
+              <div className="flex flex-col w-32">
+                 <div className="flex justify-between text-xs font-medium mb-1">
+                   <span>XP: {xp}</span>
+                   {nextRank && <span>{nextRank.minXp}</span>}
+                 </div>
+                 <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500"
+                     style={{ width: `${progressToNext}%` }}
+                   ></div>
+                 </div>
+              </div>
+            </div>
 
-      const questionText = document.getElementById("question-text");
-      const optionsContainer = document.getElementById("options-container");
-      const nextBtn = document.getElementById("next-btn");
-      const quizContent = document.getElementById("quiz-content");
-      const quizResult = document.getElementById("quiz-result");
-      const scoreText = document.getElementById("score-text");
+            {/* Controls */}
+            <div className="flex items-center gap-2 self-end md:self-auto">
+              <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                <button 
+                  onClick={() => setActiveTab('cards')}
+                  className={`p-2 rounded-lg transition-all ${activeTab === 'cards' ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  title="Картки"
+                >
+                  <BookOpen size={20} />
+                </button>
+                <button 
+                  onClick={() => setActiveTab('timeline')}
+                  className={`p-2 rounded-lg transition-all ${activeTab === 'timeline' ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  title="Часова лінія"
+                >
+                  <Clock size={20} />
+                </button>
+                <button 
+                  onClick={() => setActiveTab('memory')}
+                  className={`p-2 rounded-lg transition-all ${activeTab === 'memory' ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  title="Гра Пам'ять"
+                >
+                  <Grid size={20} />
+                </button>
+                <button 
+                  onClick={() => setActiveTab('quiz')}
+                  className={`p-2 rounded-lg transition-all ${activeTab === 'quiz' ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  title="Тест"
+                >
+                  <GraduationCap size={20} />
+                </button>
+              </div>
 
-      function loadQuestion() {
-        const currentData = quizQuestions[currentQuestionIndex];
-        // Ось тут скрипт замінює текст "Завантаження питання..." на реальне питання
-        questionText.textContent = `${currentQuestionIndex + 1}. ${currentData.question}`;
-        optionsContainer.innerHTML = "";
-        nextBtn.style.display = "none";
+              <button 
+                onClick={() => setIsDark(!isDark)}
+                className={`p-2 rounded-full transition-transform hover:rotate-12 hover:bg-slate-100 dark:hover:bg-slate-800 border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}
+              >
+                {isDark ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-slate-600" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        currentData.options.forEach((option, index) => {
-            const btn = document.createElement("button");
-            btn.className = "option-btn";
-            btn.textContent = option;
-            btn.onclick = () => checkAnswer(index, btn);
-            optionsContainer.appendChild(btn);
-        });
-      }
-
-      function checkAnswer(selectedIndex, btnElement) {
-        const currentData = quizQuestions[currentQuestionIndex];
-        const buttons = optionsContainer.querySelectorAll(".option-btn");
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
         
-        buttons.forEach(btn => btn.disabled = true);
+        {/* === TAB: CARDS === */}
+        {activeTab === 'cards' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-yellow-500">
+                Вивчай пам'ятки
+              </h2>
+              <p className={`max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                Натискай на картки, щоб дізнатися дату та епоху. За кожну нову картку ти отримуєш <span className="text-yellow-500 font-bold">+15 XP</span>.
+              </p>
+              <button 
+                onClick={shuffleCards}
+                className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-all hover:shadow-lg active:scale-95"
+              >
+                <Shuffle size={18} />
+                Перемішати
+              </button>
+            </div>
 
-        if (selectedIndex === currentData.correct) {
-            btnElement.classList.add("correct");
-            score++;
-        } else {
-            btnElement.classList.add("wrong");
-            buttons[currentData.correct].classList.add("correct");
-        }
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+              {monuments.map((item) => (
+                <div 
+                  key={item.id}
+                  onClick={() => toggleCard(item.id)}
+                  className="group h-[400px] w-full [perspective:1000px] cursor-pointer"
+                >
+                  <div className={`relative h-full w-full transition-all duration-700 [transform-style:preserve-3d] ${flippedCards[item.id] ? '[transform:rotateY(180deg)]' : ''}`}>
+                    
+                    {/* Front */}
+                    <div className={`absolute inset-0 w-full h-full rounded-2xl overflow-hidden shadow-xl [backface-visibility:hidden] border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                      
+                      {!visitedCards.has(item.id) && (
+                         <div className="absolute top-4 right-4 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-lg">
+                           +15 XP
+                         </div>
+                      )}
 
-        nextBtn.style.display = "inline-block";
-      }
+                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        <div className="flex items-center gap-2 text-yellow-400 text-sm font-bold uppercase tracking-wider mb-1">
+                          <HelpCircle size={14} />
+                          Натисни
+                        </div>
+                        <h3 className="text-2xl font-bold">{item.name}</h3>
+                      </div>
+                    </div>
 
-      nextBtn.addEventListener("click", () => {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < quizQuestions.length) {
-            loadQuestion();
-        } else {
-            showResults();
-        }
-      });
+                    {/* Back */}
+                    <div className={`absolute inset-0 w-full h-full rounded-2xl p-8 flex flex-col items-center justify-center text-center [transform:rotateY(180deg)] [backface-visibility:hidden] bg-gradient-to-br ${isDark ? 'from-slate-800 to-slate-900 border border-slate-700' : 'from-blue-600 to-blue-800 text-white shadow-2xl'}`}>
+                      <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-white'}`}>{item.name}</h3>
+                      
+                      <div className="w-16 h-1 bg-yellow-400 rounded-full my-6"></div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <p className={`text-xs uppercase tracking-widest opacity-70 ${isDark ? 'text-slate-400' : 'text-blue-200'}`}>Рік створення</p>
+                          <p className="text-3xl font-extrabold text-yellow-400">{item.year}</p>
+                        </div>
+                        
+                        <div>
+                          <p className={`text-xs uppercase tracking-widest opacity-70 ${isDark ? 'text-slate-400' : 'text-blue-200'}`}>Історична доба</p>
+                          <p className="text-lg font-medium">{item.era}</p>
+                        </div>
+                      </div>
+                      
+                      <p className={`mt-6 text-sm italic opacity-80 ${isDark ? 'text-slate-300' : 'text-blue-100'}`}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      function showResults() {
-        quizContent.style.display = "none";
-        quizResult.style.display = "block";
-        scoreText.textContent = `Твій результат: ${score} з ${quizQuestions.length}`;
-      }
+        {/* === TAB: TIMELINE === */}
+        {activeTab === 'timeline' && (
+           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+             <div className="text-center mb-12">
+                <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">
+                  Подорож у часі
+                </h2>
+                <p className={`max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Хронологія розвитку української архітектури та історії.
+                </p>
+             </div>
 
-      // Старт тесту (запускає функцію, яка прибирає текст "Завантаження...")
-      loadQuestion();
+             <div className="relative">
+                <div className={`absolute left-4 md:left-1/2 top-0 bottom-0 w-1 ${isDark ? 'bg-slate-700' : 'bg-slate-200'} md:-ml-0.5`}></div>
 
-    </script>
-  </body>
-</html>
+                <div className="space-y-12">
+                  {timelineData.map((item, index) => {
+                    const isEven = index % 2 === 0;
+                    return (
+                      <div key={item.id} className={`relative flex items-center md:justify-between ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                        
+                        <div className={`absolute left-4 md:left-1/2 w-8 h-8 rounded-full border-4 z-10 flex items-center justify-center -translate-x-1/2 md:translate-x-[-50%] ${isDark ? 'bg-slate-900 border-blue-500' : 'bg-white border-blue-500'}`}>
+                           <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+                        </div>
+
+                        <div className="hidden md:block w-1/2"></div>
+
+                        <div className="w-full md:w-5/12 pl-12 md:pl-0">
+                          <div className={`p-4 rounded-xl border shadow-lg hover:shadow-xl transition-shadow ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} group`}>
+                             <div className="relative h-40 overflow-hidden rounded-lg mb-4">
+                               <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                               <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+                                 {item.year}
+                               </div>
+                             </div>
+                             <h3 className="text-xl font-bold mb-1">{item.name}</h3>
+                             <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{item.era}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                 <div className="relative mt-12 flex justify-center">
+                    <div className={`px-4 py-2 rounded-full border text-sm font-medium ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'}`}>
+                       Сьогодні
+                    </div>
+                 </div>
+             </div>
+           </div>
+        )}
+
+        {/* === TAB: MEMORY GAME (NEW) === */}
+        {activeTab === 'memory' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+             <div className="text-center mb-8">
+                <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-500">
+                  Знайди пару
+                </h2>
+                <div className="flex justify-center gap-6 text-sm font-medium">
+                  <span className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                    <RotateCcw size={14} /> Ходи: {memoryMoves}
+                  </span>
+                  <span className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                     Пари: {memoryMatched.length} / 6
+                  </span>
+                </div>
+             </div>
+
+             {isMemoryWon ? (
+                <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
+                  <Confetti />
+                  <Trophy size={64} className="mx-auto text-yellow-400 mb-6" />
+                  <h3 className="text-3xl font-bold mb-4">Перемога!</h3>
+                  <p className="text-lg mb-8 opacity-80">Ти знайшов усі пари за {memoryMoves} ходів!</p>
+                  <button 
+                    onClick={startMemoryGame}
+                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center gap-2 mx-auto"
+                  >
+                    <Play size={20} /> Грати знову
+                  </button>
+                </div>
+             ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                   {memoryCards.map((card, index) => {
+                     const isFlipped = memoryFlipped.includes(index) || memoryMatched.includes(card.id);
+                     return (
+                        <div 
+                          key={card.uniqueId} 
+                          onClick={() => handleMemoryClick(index)}
+                          className={`aspect-[3/4] cursor-pointer perspective-1000 relative group`}
+                        >
+                           <div className={`w-full h-full transition-all duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''} relative`}>
+                              
+                              {/* Back (Closed) */}
+                              <div className={`absolute inset-0 backface-hidden flex items-center justify-center rounded-xl shadow-md border-2 
+                                ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} 
+                                group-hover:border-blue-400 transition-colors`}>
+                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-yellow-400 opacity-20"></div>
+                              </div>
+
+                              {/* Front (Open) */}
+                              <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-xl overflow-hidden shadow-lg border-2 
+                                ${memoryMatched.includes(card.id) ? 'border-green-500' : 'border-blue-500'} 
+                                bg-white dark:bg-slate-800 flex items-center justify-center p-2 text-center`}>
+                                 
+                                 {card.type === 'image' ? (
+                                   <img src={card.content} alt="memory" className="w-full h-full object-cover rounded-lg" />
+                                 ) : (
+                                   <span className="font-bold text-sm md:text-base">{card.content}</span>
+                                 )}
+
+                                 {memoryMatched.includes(card.id) && (
+                                   <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                                      <CheckCircle className="text-green-600 w-12 h-12" />
+                                   </div>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+                     );
+                   })}
+                </div>
+             )}
+          </div>
+        )}
+
+        {/* === TAB: QUIZ === */}
+        {activeTab === 'quiz' && (
+          <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {!showResult ? (
+              <div className={`rounded-2xl shadow-xl overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <div className="h-2 w-full bg-slate-200 dark:bg-slate-700">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-yellow-400 transition-all duration-500 ease-out"
+                    style={{ width: `${((currentQ) / quizQuestions.length) * 100}%` }}
+                  ></div>
+                </div>
+
+                <div className="p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-full ${isDark ? 'bg-slate-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                      Питання {currentQ + 1} з {quizQuestions.length}
+                    </span>
+                    <div className="flex gap-4">
+                       <span className="text-sm text-slate-400 font-medium flex items-center gap-1"><Star size={14} className="text-yellow-500"/> XP: {xp}</span>
+                       <span className="text-sm text-slate-400 font-medium">Бали: {score}</span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-bold mb-8 leading-tight">
+                    {quizQuestions[currentQ].question}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {quizQuestions[currentQ].options.map((opt, idx) => {
+                      let btnClass = `w-full p-4 rounded-xl text-left font-medium transition-all duration-200 flex justify-between items-center border-2 `;
+                      
+                      if (isAnswered) {
+                        if (idx === quizQuestions[currentQ].correct) {
+                          btnClass += "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 ";
+                        } else if (idx === selectedOption) {
+                          btnClass += "border-red-500 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 ";
+                        } else {
+                          btnClass += "border-transparent opacity-50 ";
+                        }
+                      } else {
+                        btnClass += `border-transparent hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700 ${isDark ? 'bg-slate-700/50' : 'bg-slate-100'}`;
+                      }
+
+                      return (
+                        <button 
+                          key={idx}
+                          onClick={() => handleAnswer(idx)}
+                          disabled={isAnswered}
+                          className={btnClass}
+                        >
+                          {opt}
+                          {isAnswered && idx === quizQuestions[currentQ].correct && <CheckCircle className="text-green-500" />}
+                          {isAnswered && idx === selectedOption && idx !== quizQuestions[currentQ].correct && <XCircle className="text-red-500" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className={`p-6 border-t flex justify-end ${isDark ? 'border-slate-700 bg-slate-900/50' : 'border-slate-100 bg-slate-50'}`}>
+                  <button 
+                    onClick={nextQuestion}
+                    disabled={!isAnswered}
+                    className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                      isAnswered 
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1' 
+                        : 'bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'
+                    }`}
+                  >
+                    {currentQ === quizQuestions.length - 1 ? "Завершити" : "Далі"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={`text-center p-10 rounded-3xl border shadow-2xl relative overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-white'}`}>
+                {score === quizQuestions.length && <Confetti />}
+                
+                <div className="relative z-10">
+                  <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 text-4xl shadow-xl ${
+                    score > quizQuestions.length / 2 
+                      ? 'bg-gradient-to-br from-green-400 to-green-600 text-white' 
+                      : 'bg-gradient-to-br from-orange-400 to-red-500 text-white'
+                  }`}>
+                    <Trophy size={40} />
+                  </div>
+
+                  <h2 className="text-3xl font-extrabold mb-2">
+                    {score === quizQuestions.length ? "Відмінно!" : score > quizQuestions.length / 2 ? "Хороший результат!" : "Спробуй ще раз!"}
+                  </h2>
+                  
+                  <div className="flex justify-center items-center gap-4 mb-8">
+                     <div className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-200'}`}>
+                        <span className="block text-xs uppercase opacity-60">Правильно</span>
+                        <span className="font-bold text-xl">{score}/{quizQuestions.length}</span>
+                     </div>
+                     <div className={`px-4 py-2 rounded-lg border bg-yellow-50 border-yellow-200 text-yellow-800`}>
+                        <span className="block text-xs uppercase opacity-60">Отримано XP</span>
+                        <span className="font-bold text-xl">+{score * 50 + 100}</span>
+                     </div>
+                  </div>
+
+                  <div className="flex justify-center gap-4">
+                    <button 
+                      onClick={resetQuiz}
+                      className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-500/30 active:scale-95"
+                    >
+                      <RotateCcw size={20} />
+                      Пройти знову
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('memory')}
+                      className={`px-8 py-3 rounded-xl font-bold transition-all border-2 ${isDark ? 'border-slate-600 hover:bg-slate-700' : 'border-slate-200 hover:bg-slate-50'}`}
+                    >
+                      Грати в Memory
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+      
+      {/* CSS for 3D Transform utilities that might be missing in standard Tailwind config */}
+      <style>{`
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+      `}</style>
+    </div>
+  );
+};
+
+export default UAHistoryTrainer;
